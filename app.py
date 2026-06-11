@@ -179,10 +179,37 @@ if mode == "📋 Single Ticket":
         if is_mismatch:
             st.subheader("📄 Evidence Dossier")
             dossier = generate_dossier(result)
-            st.markdown(
-                f"<div class='dossier-box'>{json.dumps(dossier, indent=2)}</div>",
-                unsafe_allow_html=True,
-            )
+
+            d1, d2 = st.columns(2)
+            with d1:
+                st.markdown(f"**🎫 Ticket ID:** `{dossier['ticket_id']}`")
+                st.markdown(f"**🏷️ Assigned Priority:** `{dossier['assigned_priority']}`")
+                st.markdown(f"**🔍 Inferred Severity:** `{dossier['inferred_severity']}`")
+            with d2:
+                st.markdown(f"**⚡ Mismatch Type:** `{dossier['mismatch_type']}`")
+                st.markdown(f"**📊 Severity Delta:** `{dossier['severity_delta']:+d}`")
+                st.markdown(f"**🎯 Confidence:** `{dossier['confidence']:.2%}`")
+
+            st.markdown("**🔎 Constraint Analysis:**")
+            st.info(dossier["constraint_analysis"])
+
+            st.markdown("**📌 Feature Evidence:**")
+            for ev in dossier["feature_evidence"]:
+                signal = ev.get("signal", "").replace("_", " ").title()
+                value = ev.get("value", "")
+                interp = ev.get("interpretation", "")
+                weight = ev.get("weight", "")
+                source = ev.get("source_field", "")
+                with st.expander(f"🔹 {signal}  —  source: `{source}`"):
+                    if isinstance(value, list):
+                        st.markdown(f"**Keywords found:** {', '.join(value)}")
+                    else:
+                        st.markdown(f"**Value:** {value}")
+                    if interp:
+                        st.markdown(f"**Interpretation:** {interp}")
+                    if weight != "":
+                        st.markdown(f"**Weight:** {weight}")
+
             st.download_button(
                 "⬇️ Download Dossier (JSON)",
                 data=json.dumps(dossier, indent=2),
@@ -427,9 +454,42 @@ elif mode == "📊 Dashboard":
                                 f"{mismatch_df.iloc[i].get('Ticket Subject', '')[:60]}"
                             ))
         dossier = generate_dossier(mismatch_df.iloc[idx].to_dict())
-        st.markdown(
-            f"<div class='dossier-box'>{json.dumps(dossier, indent=2)}</div>",
-            unsafe_allow_html=True,
+
+        d1, d2 = st.columns(2)
+        with d1:
+            st.markdown(f"**🎫 Ticket ID:** `{dossier['ticket_id']}`")
+            st.markdown(f"**🏷️ Assigned Priority:** `{dossier['assigned_priority']}`")
+            st.markdown(f"**🔍 Inferred Severity:** `{dossier['inferred_severity']}`")
+        with d2:
+            st.markdown(f"**⚡ Mismatch Type:** `{dossier['mismatch_type']}`")
+            st.markdown(f"**📊 Severity Delta:** `{dossier['severity_delta']:+d}`")
+            st.markdown(f"**🎯 Confidence:** `{dossier['confidence']:.2%}`")
+
+        st.markdown("**🔎 Constraint Analysis:**")
+        st.info(dossier["constraint_analysis"])
+
+        st.markdown("**📌 Feature Evidence:**")
+        for ev in dossier["feature_evidence"]:
+            signal = ev.get("signal", "").replace("_", " ").title()
+            value = ev.get("value", "")
+            interp = ev.get("interpretation", "")
+            weight = ev.get("weight", "")
+            source = ev.get("source_field", "")
+            with st.expander(f"🔹 {signal}  —  source: `{source}`"):
+                if isinstance(value, list):
+                    st.markdown(f"**Keywords found:** {', '.join(value)}")
+                else:
+                    st.markdown(f"**Value:** {value}")
+                if interp:
+                    st.markdown(f"**Interpretation:** {interp}")
+                if weight != "":
+                    st.markdown(f"**Weight:** {weight}")
+
+        st.download_button(
+            "⬇️ Download Dossier (JSON)",
+            data=json.dumps(dossier, indent=2),
+            file_name=f"dossier_{dossier['ticket_id']}.json",
+            mime="application/json",
         )
     else:
         st.info("No mismatch tickets found.")
