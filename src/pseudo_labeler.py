@@ -129,8 +129,10 @@ def generate_pseudo_labels(df: pd.DataFrame) -> pd.DataFrame:
     print("[Stage 1] Computing resolution-time severity scores …")
     rt_scores = resolution_time_severity(df)
 
-    # Fuse: weighted average (NLP heavier because resolution time can lag)
-    W_NLP, W_RT = 0.60, 0.40
+    # Fuse: when NLP score is very high (>0.6), boost NLP weight to 0.85
+    # Strong urgency language is reliable regardless of resolution time
+    W_NLP = np.where(nlp_scores > 0.6, 0.85, 0.60)
+    W_RT = 1.0 - W_NLP
     fused = W_NLP * nlp_scores + W_RT * rt_scores
 
     df["nlp_score"] = nlp_scores
